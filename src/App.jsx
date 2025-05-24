@@ -1,32 +1,44 @@
-import { useQuery } from '@tanstack/react-query'
-import React from 'react'
-
+import { useMutation } from '@tanstack/react-query'
+import { useState } from 'react'
 function App() {
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['posts'],
-    queryFn: () =>{
-        return fetch('https://jsonplaceholder.typicode.com/posts').then(res=>res.json())
-    },
-    staleTime: 1000 * 10,
-    // refetchOnWindowFocus: true,
-    // refetchOnMount: true,
-    // refetchOnReconnect: true,
-    // refetchInterval: 1000 ,
-    // refetchIntervalInBackground: true,
-  });
+    const [categoryName, setCategoryName] = useState('')
+    const [isActive, setIsActive] = useState(true)
 
-  if (isLoading) return <div>Loading...</div>
+    const postCategoryMutation = useMutation({
+        mutationFn: (data)=>{
+            return fetch("https://66d7839637b1cadd8051ba0d.mockapi.io/nn/api/category",{
+                method: "post",
+                body: JSON.stringify(data)
+            });
+        }
+    });
 
-  if (error) return <div>Error: {error.message}</div>
+    const handleSubmit = () => {
+        postCategoryMutation.mutate({
+            name: categoryName,
+            isActive: isActive
+        })
+    }
 
-  return (
-    <div>
-      {data.map(post => (
-        <div key={post.id}>{post.title}</div>
-      ))}
-    </div>
-  )
+    return (
+        <div>
+            <input type="text" value={categoryName} onChange={(e) => setCategoryName(e.target.value)} />
+            <br />
+            <br />
+            <select value={isActive} onChange={(e) => setIsActive(e.target.value)}>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+            <br />
+            <br />
+            <button onClick={handleSubmit} disabled={postCategoryMutation.isPending}>{postCategoryMutation.isPending ? "Submitting..." : "Submit"}</button>
+
+            {postCategoryMutation.isError && <div>Error</div>}
+            {postCategoryMutation.isSuccess && <div>Success: {JSON.stringify(postCategoryMutation)}</div>}
+
+        </div>
+    )
 }
 
 export default App
